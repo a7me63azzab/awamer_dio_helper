@@ -9,20 +9,21 @@ class PrevDioHelper {
   static late String _branchKey;
   static late String baseUrl;
 
-  static init({required String base, String? branch, String? branchKey}){
-    baseUrl=base;
-    _branch = branch??"1";
-    _branchKey = branchKey??"branchId";
+  static init({required String base, String? branch, String? branchKey}) {
+    baseUrl = base;
+    _branch = branch ?? "1";
+    _branchKey = branchKey ?? "branchId";
   }
 
-  PrevDioHelper({ this.forceRefresh = true,required this.context}){
+  PrevDioHelper({this.forceRefresh = true, required this.context}) {
     _dio = Dio(
-      BaseOptions(
-          baseUrl: baseUrl,
-          contentType: "application/x-www-form-urlencoded; charset=utf-8"),
+      BaseOptions(baseUrl: baseUrl, contentType: "application/json"),
     )
       ..interceptors.add(_getCacheManager().interceptor)
-      ..interceptors.add(LogInterceptor(responseBody: true,requestBody: true,logPrint: (data)=>log(data.toString())));
+      ..interceptors.add(LogInterceptor(
+          responseBody: true,
+          requestBody: true,
+          logPrint: (data) => log(data.toString())));
   }
 
   DioCacheManager _getCacheManager() {
@@ -44,7 +45,8 @@ class PrevDioHelper {
   Future<dynamic> get({required String url}) async {
     _dio.options.headers = await _getHeader();
     try {
-      var response = await _dio.get("$url", options: _buildCacheOptions({"url":url}));
+      var response =
+          await _dio.get("$url", options: _buildCacheOptions({"url": url}));
       print("response ${response.statusCode}");
 
       var data = response.data;
@@ -54,7 +56,9 @@ class PrevDioHelper {
         CustomToast.showToastNotification(data["msg"].toString());
       }
     } on DioError catch (e) {
-      if (e.response?.statusCode == 401 || e.response?.statusCode == 301|| e.response?.statusCode == 302) {
+      if (e.response?.statusCode == 401 ||
+          e.response?.statusCode == 301 ||
+          e.response?.statusCode == 302) {
         tokenExpired();
       } else {
         CustomToast.showToastNotification("chick internet");
@@ -63,21 +67,25 @@ class PrevDioHelper {
     return null;
   }
 
-  Future<dynamic> post({required String url,required Map<String, dynamic> body,bool showLoader = true}) async {
+  Future<dynamic> post(
+      {required String url,
+      required Map<String, dynamic> body,
+      bool showLoader = true}) async {
     if (showLoader) DioUtils.showLoadingDialog();
     body.addAll({_branchKey: _branch});
     _printRequestBody(body);
     _dio.options.headers = await _getHeader();
     try {
-      var response =
-          await _dio.post("$url", data: FormData.fromMap(body));
+      var response = await _dio.post("$url", data: FormData.fromMap(body));
       print("response ${response.statusCode}");
       if (showLoader) DioUtils.dismissDialog();
       CustomToast.showToastNotification(response.data["msg"].toString());
       if (response.data["key"] == "success") return response.data;
     } on DioError catch (e) {
       if (showLoader) DioUtils.dismissDialog();
-      if (e.response?.statusCode == 401 || e.response?.statusCode == 301|| e.response?.statusCode == 302) {
+      if (e.response?.statusCode == 401 ||
+          e.response?.statusCode == 301 ||
+          e.response?.statusCode == 302) {
         tokenExpired();
       } else {
         CustomToast.showToastNotification("chick internet");
@@ -88,7 +96,9 @@ class PrevDioHelper {
   }
 
   Future<dynamic> uploadFile(
-      {required String url, required Map<String, dynamic> body,bool showLoader = true}) async {
+      {required String url,
+      required Map<String, dynamic> body,
+      bool showLoader = true}) async {
     if (showLoader) DioUtils.showLoadingDialog();
     body.addAll({_branchKey: _branch});
     _printRequestBody(body);
@@ -132,7 +142,9 @@ class PrevDioHelper {
       if (response.data["key"] == "success") return response.data;
     } on DioError catch (e) {
       if (showLoader) DioUtils.dismissDialog();
-      if (e.response?.statusCode == 401 || e.response?.statusCode == 301|| e.response?.statusCode == 302) {
+      if (e.response?.statusCode == 401 ||
+          e.response?.statusCode == 301 ||
+          e.response?.statusCode == 302) {
         tokenExpired();
       } else {
         CustomToast.showToastNotification("chick internet");
@@ -187,7 +199,9 @@ class PrevDioHelper {
       if (response.data["key"] == "success") return response.data;
     } on DioError catch (e) {
       if (showLoader) DioUtils.dismissDialog();
-      if (e.response?.statusCode == 401 || e.response?.statusCode == 301|| e.response?.statusCode == 302) {
+      if (e.response?.statusCode == 401 ||
+          e.response?.statusCode == 301 ||
+          e.response?.statusCode == 302) {
         tokenExpired();
       } else {
         CustomToast.showToastNotification("chick internet");
@@ -208,16 +222,14 @@ class PrevDioHelper {
   _getHeader() async {
     String token = GlobalState.instance.get("token");
     return {
-      'Content-Type': 'application/json; charset=UTF-8',
+      'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
     };
   }
 
-
-  void tokenExpired()async {
+  void tokenExpired() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.clear();
     AutoRouter.of(context).popUntilRouteWithName(DioUtils.authRoute);
   }
 }
-

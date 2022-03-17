@@ -19,7 +19,7 @@ class DioHelper {
     _dio = Dio(
       BaseOptions(
           baseUrl: baseUrl,
-          contentType: "application/x-www-form-urlencoded; charset=utf-8"),
+          contentType: "application/json"),
     )
       ..interceptors.add(_getCacheManager().interceptor)
       ..interceptors.add(LogInterceptor(responseBody: true,requestBody: true,logPrint: (data)=>log(data.toString())));
